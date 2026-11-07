@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Momentum / Proctors — Frontend
 
-## Getting Started
+Web client for a school assessment platform: curriculum management, AI-assisted question generation, oral/voice assessments, and learning analytics.
 
-First, run the development server:
+Built with **Next.js 16 (App Router)**, **React 19**, **TypeScript**, and a **FastAPI** backend.
+
+## What's inside
+
+| Area | Routes | Description |
+| --- | --- | --- |
+| Marketing & auth | `/`, `/login`, `/signup` | Landing page, login, 3-step school onboarding |
+| Admin console | `/dashboard`, `/syllabus`, `/classes`, `/subjects`, `/chapters`, `/assessments`, `/students`, `/reports`, `/team`, `/school-settings`, `/control-panel` | Role-aware management of classes → subjects → chapters, question banks, assessments, students, faculty, and platform diagnostics |
+| Student portal | `/assessment/join`, `/assessment/verify`, `/assessment/[sessionId]`, `/result/[id]` | Token-based entry, assessment session, result summary |
+| Voice interview | `/interview/[interviewId]`, `/interview/[interviewId]/result` | Full-screen speech-driven assessment with the "Buddy" assistant |
+
+## Quick start
+
+**Prerequisites:** Node.js 20+, npm, and a running backend API.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL if needed
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Default backend URL: `http://localhost:5001/api`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+| `npm run lint` | ESLint |
 
-## Learn More
+## Tech stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Next.js 16.2.6 / React 19.2.4 / TypeScript 5**
+- **Axios** service layer with bearer-token interceptor
+- **Tailwind CSS 3** tokens + a large CSS-variable design system in `src/app/globals.css`
+- **Lenis** smooth scrolling, **lucide-react** icons
+- Browser **Web Speech API**, **MediaRecorder**, and **WebSocket** for the voice interview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Repository layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+src/
+├── app/          # App Router pages: public, (admin), (student), interview
+├── components/   # layout, common, cards, forms, tables, student(s), team
+├── hooks/        # useApi, useAuth, useAssessment
+├── lib/          # Axios instance + JWT helpers
+├── services/     # Typed API clients per domain + voice subsystem
+├── types/        # Shared domain interfaces
+├── utils/        # Constants, formatters, helpers, storage
+├── validations/  # Lightweight form validators
+└── middleware.ts # Edge JWT route gate + role/feature RBAC
+```
 
-## Deploy on Vercel
+## Documentation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **[DOCUMENTATION.md](./DOCUMENTATION.md)** — complete technical documentation: architecture, folder structure, routing, auth, data layer, flows, API reference, conventions, and known gaps.
+- **[ONBOARDING.md](./ONBOARDING.md)** — developer environment setup.
+- **[PRODUCT_DOCUMENTATION.md](./PRODUCT_DOCUMENTATION.md)** — product feature catalog and backend overview.
+- **[INTERVIEW_SYSTEM.md](./INTERVIEW_SYSTEM.md)** — voice interview, STT/TTS, and AI evaluation architecture.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Authentication model
+
+Login stores the JWT in `localStorage` (for Axios) and a `token` cookie (for Next.js middleware). Middleware decodes the JWT to gate dashboard routes by role and `allowed_features`; the backend remains the source of truth for authorization.
+
+## Environment
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:5001/api` | Backend API base URL (baked in at build time) |
+
+## Docker
+
+```bash
+docker build -t proctors-frontend .
+docker run -p 3000:3000 proctors-frontend
+```
+
+Pass `NEXT_PUBLIC_API_URL` at **build** time, since `NEXT_PUBLIC_*` values are embedded in the client bundle.
